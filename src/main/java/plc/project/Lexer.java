@@ -1,5 +1,6 @@
 package plc.project;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -27,8 +28,17 @@ public final class Lexer {
      * Repeatedly lexes the input using {@link #lexToken()}, also skipping over
      * whitespace where appropriate.
      */
+    // Julien
     public List<Token> lex() {
-        throw new UnsupportedOperationException(); //TODO
+        ArrayList<Token> tokens = new ArrayList<>();
+        // Loops through the input CharStream
+        while(chars.has(0)){
+            // Skip whitespace
+            // Use Character.isWhitespace(chars.get(0)) instead?
+            while(chars.has(0) && Character.toString(chars.get(0)).matches("[ \\b\\n\\r\\t]"){
+
+            }
+        }
     }
 
     /**
@@ -39,10 +49,12 @@ public final class Lexer {
      * The next character should start a valid token since whitespace is handled
      * by {@link #lex()}
      */
+    // Julien
     public Token lexToken() {
         throw new UnsupportedOperationException(); //TODO
     }
 
+    // Julien
     public Token lexIdentifier() {
         throw new UnsupportedOperationException(); //TODO
     }
@@ -51,10 +63,12 @@ public final class Lexer {
         throw new UnsupportedOperationException(); //TODO
     }
 
+    // Julien
     public Token lexCharacter() {
         throw new UnsupportedOperationException(); //TODO
     }
 
+    // Julien
     public Token lexString() {
         throw new UnsupportedOperationException(); //TODO
     }
