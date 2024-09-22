@@ -31,8 +31,8 @@ public final class Lexer {
     public List<Token> lex() {
         List<Token> tokens = new ArrayList<>();
         while (chars.has(0)) {
-            // Skip whitespace
-            while (chars.has(0) && Character.isWhitespace(chars.get(0))) {
+            // Skip whitespace (isWhitespace checks for [ \b\n\r\t])
+            while (chars.has(0) && isWhitespace(chars.get(0))){
                 chars.advance();
                 chars.skip();
             }
@@ -53,14 +53,16 @@ public final class Lexer {
      */
     public Token lexToken() {
         char current = chars.get(0);
-        if (isLetter(current) || current == '_') {
+        if (peek("[A-Za-z_]")) {
             return lexIdentifier();
-        } else if (current == '\'' ) {
+        } else if (peek("[+-]") && (peek("[+-]", "[1-9]") || peek("[+-]", "0"))) {
+            return lexNumber(); // Handles signed integers and decimals
+        } else if (peek("0") || peek("[1-9]")) {
+            return lexNumber(); // Handles unsigned integers and decimals
+        } else if (peek("'")) {
             return lexCharacter();
-        } else if (current == '"') {
+        } else if (peek("\"")) {
             return lexString();
-        } else if (isDigit(current) || current == '+' || current == '-') {
-            return lexNumber();
         } else {
             return lexOperator();
         }
