@@ -132,6 +132,11 @@ public class LexerTests {
                         new Token(Token.Type.OPERATOR, "=", 12),
                         new Token(Token.Type.INTEGER, "5", 14),
                         new Token(Token.Type.OPERATOR, ";", 15)
+                )),
+                Arguments.of("Example 4", "\'\"\'string\"\'\"", Arrays.asList(
+                        new Token(Token.Type.CHARACTER, "'\"'", 0),
+                        new Token(Token.Type.IDENTIFIER, "string", 3),
+                        new Token(Token.Type.STRING, "\"'\"", 9)
                 ))
         );
     }

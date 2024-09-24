@@ -52,7 +52,6 @@ public final class Lexer {
      * by {@link #lex()}
      */
     public Token lexToken() {
-        char current = chars.get(0);
         if (peek("[A-Za-z_]")) {
             return lexIdentifier();
         } else if (peek("[+-]") && (peek("[+-]", "[1-9]") || peek("[+-]", "0"))) {
@@ -113,6 +112,7 @@ public final class Lexer {
             }
         }
         String lexeme = sb.toString();
+        chars.skip();
         if (isDecimal) {
             return new Token(Token.Type.DECIMAL, lexeme, start);
         } else {
@@ -121,70 +121,54 @@ public final class Lexer {
     }
 
     public Token lexCharacter() {
-        int start = chars.index;
-        chars.advance(); // Skip opening '
+        // Checks to see character begins with '
+        if (!match("'")) {
+            throw new ParseException("Character literal must start with a single quote.", chars.index);
+        }
+
         if (!chars.has(0)) {
-            throw new ParseException("Unterminated character literal", chars.index);
+            throw new ParseException("Unterminated character literal.", chars.index);
         }
-        char c = chars.get(0);
-        StringBuilder sb = new StringBuilder();
-        if (c == '\\') {
-            sb.append(c);
-            chars.advance();
-            if (!chars.has(0)) {
-                throw new ParseException("Invalid escape in character literal", chars.index);
-            }
-            char escape = chars.get(0);
-            if ("bnrt'\"\\".indexOf(escape) == -1) {
-                throw new ParseException("Invalid escape character", chars.index);
-            }
-            sb.append(escape);
-            chars.advance();
+
+        //Checks to see if character is an escape charcter
+        if (match("\\\\")) {
+            lexEscape();
+        } else if (match("[^'\\\\\\n\\r]")) {
+            // Checks to see if next character is valid (not new line or ')
         } else {
-            if (c == '\'') {
-                throw new ParseException("Empty character literal", chars.index);
-            }
-            sb.append(c);
-            chars.advance();
+            throw new ParseException("Invalid character in character literal.", chars.index);
         }
-        if (!chars.has(0) || chars.get(0) != '\'') {
-            throw new ParseException("Unterminated character literal", chars.index);
+
+        // Checks to see character ends with '
+        if (!match("'")) {
+            throw new ParseException("Unterminated character literal.", chars.index);
         }
-        chars.advance(); // Skip closing '
-        return new Token(Token.Type.CHARACTER, "'" + sb.toString() + "'", start);
+
+        return chars.emit(Token.Type.CHARACTER);
     }
 
     public Token lexString() {
-        int start = chars.index;
-        StringBuilder sb = new StringBuilder();
-        sb.append(chars.get(0)); // Append opening "
-        chars.advance();
+        // Checks to see string ends with "
+        if (!match("\"")) {
+            throw new ParseException("String literal must start with a double quote.", chars.index);
+        }
+
+        // Loops until " is reached
         while (chars.has(0)) {
-            char c = chars.get(0);
-            if (c == '"') {
-                sb.append(c);
-                chars.advance();
-                return new Token(Token.Type.STRING, sb.toString(), start);
-            } else if (c == '\\') {
-                sb.append(c);
-                chars.advance();
-                if (!chars.has(0)) {
-                    throw new ParseException("Invalid escape in string literal", chars.index);
-                }
-                char escape = chars.get(0);
-                if ("bnrt'\"\\ ".indexOf(escape) == -1) {
-                    throw new ParseException("Invalid escape character", chars.index);
-                }
-                sb.append(escape);
-                chars.advance();
-            } else if (c == '\n' || c == '\r') {
-                throw new ParseException("Unterminated string literal", chars.index);
+            // If string has ", ends and creates string token
+            if (peek("\"")) {
+                match("\"");
+                return chars.emit(Token.Type.STRING);
+            } else if (match("\\\\")) {
+                lexEscape();
+            } else if (match("[^\"\\\\\\n\\r]")) {
+                // Checks to see if next string character is valid (not new line or ")
             } else {
-                sb.append(c);
-                chars.advance();
+                throw new ParseException("Invalid character in string literal.", chars.index);
             }
         }
-        throw new ParseException("Unterminated string literal", chars.index);
+
+        throw new ParseException("Unterminated string literal.", chars.index);
     }
 
     public void lexEscape() {
@@ -194,40 +178,35 @@ public final class Lexer {
     }
 
     public Token lexOperator() {
-        int start = chars.index;
-        StringBuilder sb = new StringBuilder();
-        char first = chars.get(0);
-        sb.append(first);
-        chars.advance();
-        // Handle multi-character operators
-        if (first == '!' || first == '=' || first == '<' || first == '>') {
-            if (chars.has(0) && chars.get(0) == '=') {
-                sb.append('=');
-                chars.advance();
-            }
-        } else if (first == '&') {
-            if (chars.has(0) && chars.get(0) == '&') {
-                sb.append('&');
-                chars.advance();
-            }
-        } else if (first == '|') {
-            if (chars.has(0) && chars.get(0) == '|') {
-                sb.append('|');
-                chars.advance();
-            }
+        // Check for &&
+        if (match("&", "&")) {
+            return chars.emit(Token.Type.OPERATOR);
         }
-        return new Token(Token.Type.OPERATOR, sb.toString(), start);
+        // Check for ||
+        else if (match("\\|", "\\|")) {
+            return chars.emit(Token.Type.OPERATOR);
+        }
+        // Check for two character comparison operators
+        else if (match("[<>!=]")) {
+            if (match("=")) {
+                // Matched '=', length updated
+            }
+            return chars.emit(Token.Type.OPERATOR);
+        } else if (!peek("[ \b\n\r\t]")) {
+            // Any other character excluding whitespace
+            chars.advance();
+            return chars.emit(Token.Type.OPERATOR);
+        } else {
+            throw new ParseException("Invalid operator", chars.index);
+        }
     }
+
     private boolean isWhitespace(char c) {
         return c == ' ' || c == '\b' || c == '\n' || c == '\r' || c == '\t';
     }
 
     private boolean isLetter(char c) {
         return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
-    }
-
-    private boolean isLetterOrDigit(char c) {
-        return isLetter(c) || isDigit(c);
     }
 
     private boolean isDigit(char c) {
