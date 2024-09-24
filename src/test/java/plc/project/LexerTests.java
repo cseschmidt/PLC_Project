@@ -62,10 +62,8 @@ public class LexerTests {
                 Arguments.of("Single Digit", "1", false),
                 Arguments.of("Trailing Zeros", "7.000", true),
                 Arguments.of("Double Decimal", "1..0", false),
-                Arguments.of("Multiple Negative Digits", "-123.456", true)
-
-
-
+                Arguments.of("Multiple Negative Digits", "-123.456", true),
+                Arguments.of("Multiple Negative Digits", "0.00", true)
                 );
     }
 
