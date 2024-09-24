@@ -54,7 +54,7 @@ public final class Lexer {
     public Token lexToken() {
         if (peek("[A-Za-z_]")) {
             return lexIdentifier();
-        } else if (peek("[+-]") && (peek("[+-]", "[1-9]") || peek("[+-]", "0", "."))) {
+        } else if (peek("[+-]") && (peek("[+-]", "[1-9]") || peek("[+-]", "0", "\\."))) {
             return lexNumber(); // Handles signed integers and decimals
         } else if (peek("0") || peek("[1-9]")) {
             return lexNumber(); // Handles unsigned integers and decimals

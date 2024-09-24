@@ -61,7 +61,9 @@ public class LexerTests {
                 Arguments.of("Leading Decimal", ".5", false),
                 Arguments.of("Single Digit", "1", false),
                 Arguments.of("Trailing Zeros", "7.000", true),
-                Arguments.of("Double Decimal", "1..0", false)
+                Arguments.of("Double Decimal", "1..0", false),
+                Arguments.of("Multiple Negative Digits", "-123.456", true)
+
 
 
                 );
@@ -162,20 +164,28 @@ public class LexerTests {
                 Arguments.of("Example 7", "token\n", Arrays.asList(
                         new Token(Token.Type.IDENTIFIER, "token", 0)
                 )),
-                Arguments.of("Example 5", "one\btwo", Arrays.asList(
+                Arguments.of("Example 8", "one\btwo", Arrays.asList(
                         new Token(Token.Type.IDENTIFIER, "one", 0),
                         new Token(Token.Type.IDENTIFIER, "two", 4)
                 )),
-                Arguments.of("Example 5", "1.2.3", Arrays.asList(
+                Arguments.of("Example 9", "1.2.3", Arrays.asList(
                         new Token(Token.Type.DECIMAL, "1.2", 0),
                         new Token(Token.Type.OPERATOR, ".", 3),
                         new Token(Token.Type.INTEGER, "3", 4)
                 )),
-                Arguments.of("Example 5", "!====", Arrays.asList(
+                Arguments.of("Example 10", "!====", Arrays.asList(
                         new Token(Token.Type.OPERATOR, "!=", 0),
                         new Token(Token.Type.OPERATOR, "==", 2),
                         new Token(Token.Type.OPERATOR, "=", 4)
+                )),
+                Arguments.of("Example 11", "!=-0.12+02", Arrays.asList(
+                        new Token(Token.Type.OPERATOR, "!=", 0),
+                        new Token(Token.Type.DECIMAL, "-0.12", 2),
+                        new Token(Token.Type.OPERATOR, "+", 7),
+                        new Token(Token.Type.INTEGER, "0", 8),
+                        new Token(Token.Type.INTEGER, "2", 9)
                 ))
+
 
         );
     }
